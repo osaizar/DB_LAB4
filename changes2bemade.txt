@@ -4,3 +4,6 @@ Changes:
 + Route needs price parameter
 + Passenger in ticket needs to be fk
 + Flight in booking needs to be fk
++ Route needs year parameter
++ It's ok to repeat the year parameter on so many tables?
++ It's ok to have a table with only one parameter?

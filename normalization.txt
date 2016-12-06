@@ -1,0 +1,53 @@
+Route:
+id -> to, from, price, year
+to, from, year -> price
+
+Airport:
+code -> name, city
+
+City:
+id -> name, country
+
+Country:
+id -> name
+
+Weekly Flight:
+id -> weekday, route, hour
+
+Week Day:
+id -> name, year, weekpfactor
+name, year -> weekpfactor
+
+Flight:
+id -> weeklyFlight, plane, week#, year
+
+Year:
+year -> yearpfactor
+
+Plane:
+plane#
+
+Seat:
+id -> name, plane(?)
+
+Ticket:
+code -> seat, passenger, booking
+
+Passenger:
+id -> passport, name, surname
+passport -> name, surname
+
+Booking:
+code -> contact, cphone, cemail, payed, price, payedby, flight
+contact -> cphone, cemail
+
+Passenger Bookings:
+passenger, bookings -> !
+
+CCinfo:
+id -> card#, name, surname
+card# -> name, surname (card# could be pk but we will use "id" for security reasons)
+
+
+
+
