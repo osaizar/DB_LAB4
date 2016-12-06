@@ -1,0 +1,6 @@
+Changes:
+===========
+
++ Route needs price parameter
++ Passenger in ticket needs to be fk
++ Flight in booking needs to be fk
