@@ -1,3 +1,4 @@
+
 Route:
 id -> to, from, price, year
 to, from, year -> price
@@ -19,27 +20,25 @@ id -> name, year, weekpfactor
 name, year -> weekpfactor
 
 Flight:
-id -> weeklyFlight, plane, week#, year
+id -> weeklyFlight, week#, year
 
 Year:
 year -> yearpfactor
 
-Plane:
-plane#
-
 Seat:
-id -> name, plane(?)
+id -> name (40 pre-established seats, each one with a name -> 12f)
 
 Ticket:
 code -> seat, passenger, booking
 
 Passenger:
-id -> passport, name, surname
 passport -> name, surname
 
 Booking:
-code -> contact, cphone, cemail, payed, price, payedby, flight
-contact -> cphone, cemail
+code -> contact, payed, price, payedby, flight
+
+Contact:
+passenger -> cphone, cemail
 
 Passenger Bookings:
 passenger, bookings -> !
@@ -47,7 +46,6 @@ passenger, bookings -> !
 CCinfo:
 id -> card#, name, surname
 card# -> name, surname (card# could be pk but we will use "id" for security reasons)
-
 
 
 
