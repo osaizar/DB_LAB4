@@ -16,7 +16,7 @@ Weekly Flight:
 id -> weekday, route, hour
 
 Week Day:
-id -> name, year, weekpfactor
+id -> name, year, weekpfactor (not 3.)
 name, year -> weekpfactor
 
 Flight:
@@ -36,9 +36,7 @@ passport -> name, surname
 
 Booking:
 code -> contact, payed, price, payedby, flight
-
-Contact:
-passenger -> cphone, cemail
+payedby -> cphone, cemail
 
 Passenger Bookings:
 passenger, bookings -> !
@@ -46,6 +44,3 @@ passenger, bookings -> !
 CCinfo:
 id -> card#, name, surname
 card# -> name, surname (card# could be pk but we will use "id" for security reasons)
-
-
-
