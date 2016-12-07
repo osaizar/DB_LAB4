@@ -1,6 +1,6 @@
 
 Route:
-id -> to, from, price, year
+id -> to, from, price, year (not 3rd nf)
 to, from, year -> price
 
 Airport:
@@ -16,7 +16,7 @@ Weekly Flight:
 id -> weekday, route, hour
 
 Week Day:
-id -> name, year, weekpfactor (not 3.)
+id -> name, year, weekpfactor (not 3rd nf)
 name, year -> weekpfactor
 
 Flight:
@@ -32,7 +32,8 @@ Ticket:
 code -> seat, passenger, booking
 
 Passenger:
-passport -> name, surname
+id -> passport
+passport -> name, surname (not 3rd nf)
 
 Booking:
 code -> contact, payed, price, payedby, flight

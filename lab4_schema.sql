@@ -22,8 +22,8 @@ SELECT 'Creating tables' AS 'Message';
 
 CREATE TABLE route(
   id INT,
-  dest INT,
-  source INT,
+  dest VARCHAR(3),
+  source VARCHAR(3),
   price DOUBLE,
   CONSTRAINT pk_route PRIMARY KEY(id)
 );
@@ -85,7 +85,7 @@ CREATE TABLE seat(
 );
 
 CREATE TABLE ticket(
-  code INT, --?
+  code INT,
   seat INT,
   passenger INT,
   booking INT,
@@ -126,3 +126,6 @@ CREATE TABLE passenger_bookings(
 );
 
 SELECT 'Creating foreign keys' AS 'Message';
+
+ALTER TABLE route ADD CONSTRAINT fk_route_dest FOREIGN KEY (dest) REFERENCES airport(code);
+ALTER TABLE route ADD CONSTRAINT fk_route_source FOREIGN KEY (source) REFERENCES airport(code);
