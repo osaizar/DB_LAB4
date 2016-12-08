@@ -37,7 +37,7 @@ passport -> name, surname (not 3rd nf)
 
 Booking:
 code -> contact, payed, price, payedby, flight
-payedby -> cphone, cemail
+contact  -> cphone, cemail
 
 Passenger Bookings:
 passenger, bookings -> !
