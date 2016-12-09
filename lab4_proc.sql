@@ -33,12 +33,27 @@ VALUES ((SELECT code FROM airport WHERE code LIKE upper(arrcode)),
 END; //
 delimiter ;
 
+-- FIXME
 delimiter //
 CREATE PROCEDURE addFlight(IN deptcode VARCHAR(3), IN arrcode VARCHAR(3), IN yr INT, IN day VARCHAR(10), IN dtime TIME)
 BEGIN
-INSERT INTO route (dest, source, price, year)
-VALUES ((SELECT code FROM airport WHERE code LIKE upper(arrcode)),
-        (SELECT code FROM airport WHERE code LIKE upper(deptcode)),
-        cost, yr);
+
+DECLARE rt INT = (SELECT id FROM route WHERE ((dest LIKE upper(deptcode)) AND (source LIKE upper(arrcode)) AND (year = yr)));
+INSERT INTO weekly_flight (weekday, route, departure_time)
+VALUES ((SELECT id FROM week_day WHERE name LIKE lower(day)),
+        @rt,
+        dtime);
+
+DECLARE cnt INT = 1;
+WHILE @cnt < 53
+BEGIN
+   INSERT INTO flight (wflight, week, year)
+   VALUES ((SELECT id FROM weekly_flight WHERE route = @rt),
+           @cnt,
+           year);
+
+   SET @cnt = @cnt + 1;
+END;
+
 END; //
 delimiter ;
