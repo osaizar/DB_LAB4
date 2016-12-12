@@ -15,11 +15,11 @@ END; //
 delimiter ;
 
 delimiter //
-CREATE PROCEDURE addDestination(IN acode VARCHAR(3), IN aname VARCHAR(30), IN cityname VARCHAR(30))
+CREATE PROCEDURE addDestination(IN acode VARCHAR(3), IN aname VARCHAR(30), IN country VARCHAR(30))
 BEGIN
-INSERT INTO city (name) VALUES (lower(cityname));
+INSERT INTO country (name) VALUES (lower(country));
 INSERT INTO airport VALUES (upper(acode), lower(aname),
-                            (SELECT id FROM city WHERE name LIKE lower(cityname)));
+                            (SELECT id FROM country WHERE name LIKE lower(country)));
 END; //
 delimiter ;
 
@@ -54,7 +54,7 @@ DO
    INSERT INTO flight (wflight, week, year)
    VALUES ((SELECT id FROM weekly_flight WHERE route = @rt),
            @cnt,
-           year);
+           yr);
 
    SET @cnt = @cnt + 1;
 END WHILE;
