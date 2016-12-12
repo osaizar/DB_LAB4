@@ -1,6 +1,7 @@
 SELECT 'Creating help functions (part4)' AS 'Message';
 
 DROP FUNCTION IF EXISTS calculateFreeSeats;
+DROP FUNCTION IF EXISTS calculatePrice;
 
 DELIMITER $$
 CREATE FUNCTION calculateFreeSeats(flight INT)
@@ -11,7 +12,7 @@ BEGIN
   INTO @seats
   from booking
   where booking.flight = flight and booking.payed = 0;
-  RETURN seats;
+  RETURN @seats;
 
 END;
 $$
@@ -52,8 +53,8 @@ BEGIN
   join route on weekly_flight.route = route.id
   where flight.id = flight;
 
-  SET totalprice = routeprice * wfactor * (seats+1)/40 * yfactor;
-  RETURN totalprice;
+  SET @totalprice = @routeprice * @wfactor * (@seats+1)/40 * @yfactor;
+  RETURN @totalprice;
 
 END;
 $$
