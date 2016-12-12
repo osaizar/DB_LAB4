@@ -5,7 +5,7 @@ CREATE TRIGGER before_ticket_insert
     BEFORE INSERT ON ticket
     FOR EACH ROW
 BEGIN
-    SET NEW.code = RAND();
+    SET NEW.code = RAND()*10000;
 END$$
 DELIMITER ;
 
