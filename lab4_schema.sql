@@ -107,10 +107,10 @@ CREATE TABLE booking(
 );
 
 CREATE TABLE contact(
-  id NULL AUTO_INCREMENT,
+  id INT AUTO_INCREMENT,
   passenger INT NOT NULL,
   phone BIGINT,
-  email VARCHAR(30)
+  email VARCHAR(30),
   CONSTRAINT pk_contact PRIMARY KEY(id)
 );
 
