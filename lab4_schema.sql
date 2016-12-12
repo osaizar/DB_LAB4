@@ -32,16 +32,10 @@ CREATE TABLE route(
 CREATE TABLE airport(
   code VARCHAR(3) NOT NULL,
   name VARCHAR(30),
-  city INT NOT NULL,
+  country INT NOT NULL,
   CONSTRAINT pk_airport PRIMARY KEY(code)
 );
 
-CREATE TABLE city(
-  id INT AUTO_INCREMENT,
-  name VARCHAR(30),
-  country INT NOT NULL,
-  CONSTRAINT pk_city PRIMARY KEY(id)
-);
 
 CREATE TABLE country(
   id INT AUTO_INCREMENT,
@@ -105,13 +99,19 @@ CREATE TABLE passenger(
 CREATE TABLE booking(
   code INT NOT NULL,
   contact INT NOT NULL,
-  cphone BIGINT,
-  cemail VARCHAR(30),
   payed BOOLEAN,
   price DOUBLE,
   payedby INT NOT NULL,
   flight INT NOT NULL,
   CONSTRAINT pk_booking PRIMARY KEY(code)
+);
+
+CREATE TABLE contact(
+  id NULL AUTO_INCREMENT,
+  passenger INT NOT NULL,
+  phone BIGINT,
+  email VARCHAR(30)
+  CONSTRAINT pk_contact PRIMARY KEY(id)
 );
 
 CREATE TABLE ccinfo(
@@ -132,8 +132,7 @@ SELECT 'Creating foreign keys' AS 'Message';
 
 ALTER TABLE route ADD CONSTRAINT fk_route_dest FOREIGN KEY (dest) REFERENCES airport(code);
 ALTER TABLE route ADD CONSTRAINT fk_route_source FOREIGN KEY (source) REFERENCES airport(code);
-ALTER TABLE airport ADD CONSTRAINT fk_airport_city FOREIGN KEY (city) REFERENCES city(id);
-ALTER TABLE city ADD CONSTRAINT fk_city_country FOREIGN KEY (country) REFERENCES country(id);
+ALTER TABLE airport ADD CONSTRAINT fk_airport_country FOREIGN KEY (country) REFERENCES country(id);
 ALTER TABLE weekly_flight ADD CONSTRAINT fk_weeklyflight_route FOREIGN KEY (route) REFERENCES route(id);
 ALTER TABLE weekly_flight ADD CONSTRAINT fk_weeklyflight_weekday FOREIGN KEY (weekday) REFERENCES week_day(id);
 ALTER TABLE flight ADD CONSTRAINT fk_flight_weekflight FOREIGN KEY (wflight) REFERENCES weekly_flight(id);
@@ -143,7 +142,8 @@ ALTER TABLE ticket ADD CONSTRAINT fk_ticket_seat FOREIGN KEY (seat) REFERENCES s
 ALTER TABLE ticket ADD CONSTRAINT fk_ticket_passenger FOREIGN KEY (passenger) REFERENCES passenger(id);
 ALTER TABLE ticket ADD CONSTRAINT fk_ticket_booking FOREIGN KEY (booking) REFERENCES booking(code);
 ALTER TABLE booking ADD CONSTRAINT fk_booking_ccinfo FOREIGN KEY (payedby) REFERENCES ccinfo(id);
-ALTER TABLE booking ADD CONSTRAINT fk_booking_contact FOREIGN KEY (contact) REFERENCES passenger(id);
+ALTER TABLE booking ADD CONSTRAINT fk_booking_contact FOREIGN KEY (contact) REFERENCES contact(id);
 ALTER TABLE booking ADD CONSTRAINT fk_booking_flight FOREIGN KEY (flight) REFERENCES flight(id);
+ALTER TABLE contact ADD CONSTRAINT fk_contact_passenger FOREIGN KEY (passenger) REFERENCES passenger(id);
 ALTER TABLE passenger_bookings ADD CONSTRAINT fk_pb_bookings FOREIGN KEY (booking) REFERENCES booking(code);
 ALTER TABLE passenger_bookings ADD CONSTRAINT fk_pb_passenger FOREIGN KEY (passenger) REFERENCES passenger(id);
