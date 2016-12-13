@@ -1,7 +1,6 @@
 SELECT 'Creating reservation stored procedures (part 6)' AS 'Message';
 
-
--- TODO: Hay que cambiar algo, nos pasan el número de reservas. Nuestra BD no funciona así.
+-- FIXME
 delimiter //
 CREATE PROCEDURE addReservation(IN deptcode VARCHAR(3), IN arrcode VARCHAR(3),
                                 IN yr INT, IN wk INT, IN day VARCHAR(10),
@@ -22,7 +21,7 @@ SELECT id INTO @fid FROM flight WHERE year = yr
 INSERT INTO booking (price, flight)
 VALUES (calculatePrice(@fid), @fid);
 
-SET resnum = RAND()*10000;
+SET resnum = LAST_INSERT_ID();
 
 END; //
 delimiter ;
@@ -35,10 +34,7 @@ INSERT INTO passenger (passport,name)
 VALUES (pass, lower(pass_name));
 
 INSERT INTO passenger_bookings (booking, passenger)
-VALUES (reserv, (SELECT id
-                 FROM passenger
-                 WHERE name like lower(pass_name)
-                 and passport = pass));
+VALUES (reserv, LAST_INSERT_ID());
 
 END; //
 delimiter ;
@@ -61,6 +57,7 @@ WHERE code = reserv;
 END; //
 delimiter ;
 
+-- TODO: Comprobar pago antes de hacerlo
 delimiter //
 CREATE PROCEDURE addPayment(IN reserv INT, IN cc_name VARCHAR(30), IN cc_n BIGINT)
 BEGIN

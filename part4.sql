@@ -3,6 +3,8 @@ SELECT 'Creating help functions (part4)' AS 'Message';
 DROP FUNCTION IF EXISTS calculateFreeSeats;
 DROP FUNCTION IF EXISTS calculatePrice;
 
+
+-- TODO: Aprobechar que guardamos cuanta gente hay por booking
 DELIMITER $$
 CREATE FUNCTION calculateFreeSeats(flight INT)
   RETURNS INT
