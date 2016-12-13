@@ -75,7 +75,7 @@ CREATE TABLE year(
 
 CREATE TABLE seat(
   id INT AUTO_INCREMENT,
-  name VARCHAR(4),
+  name INT,
   flight  INT NOT NULL,
   CONSTRAINT pk_seat PRIMARY KEY(id)
 );

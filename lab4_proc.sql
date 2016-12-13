@@ -1,5 +1,12 @@
 SELECT 'Creating stored procedures (part3)' AS 'Message';
 
+DROP PROCEDURE IF EXISTS addYear;
+DROP PROCEDURE IF EXISTS addDay;
+DROP PROCEDURE IF EXISTS addDestination;
+DROP PROCEDURE IF EXISTS addRoute;
+DROP PROCEDURE IF EXISTS addFlight;
+
+
 delimiter //
 CREATE PROCEDURE addYear(IN yr INT, IN fctr DOUBLE)
 BEGIN
@@ -39,6 +46,7 @@ BEGIN
 
 DECLARE rt INT;
 DECLARE cnt INT;
+DECLARE cnts INT;
 
 SELECT id INTO @rt FROM route WHERE ((dest LIKE upper(deptcode)) AND (source LIKE upper(arrcode)) AND (year = yr));
 INSERT INTO weekly_flight (weekday, route, departure_time)
@@ -48,13 +56,23 @@ VALUES ((SELECT id FROM week_day WHERE name LIKE lower(day)),
 
 
 SET @cnt = 1;
+SET @cnts = 1;
 WHILE @cnt < 53
 DO
    INSERT INTO flight (wflight, week, year)
    VALUES ((SELECT id FROM weekly_flight WHERE route = @rt),
            @cnt,
            yr);
+   WHILE @cnts < 41
+   DO
+      INSERT INTO seat (name,flight)
+      VALUES(@cnts,
+            (SELECT id  FROM flight WHERE week = @cnt and year = yr and
+            wflight = (SELECT id FROM weekly_flight WHERE route = @rt)));
+      SET @cnts = @cnts + 1;
+      END WHILE;
 
+   SET @cnts = 1;
    SET @cnt = @cnt + 1;
 END WHILE;
 
