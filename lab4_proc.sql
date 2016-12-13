@@ -33,7 +33,6 @@ VALUES ((SELECT code FROM airport WHERE code LIKE upper(arrcode)),
 END; //
 delimiter ;
 
--- FIXME
 delimiter //
 CREATE PROCEDURE addFlight(IN deptcode VARCHAR(3), IN arrcode VARCHAR(3), IN yr INT, IN day VARCHAR(10), IN dtime TIME)
 BEGIN
