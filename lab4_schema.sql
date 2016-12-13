@@ -92,16 +92,16 @@ CREATE TABLE passenger(
   id INT AUTO_INCREMENT,
   passport INT,
   name VARCHAR(30),
-  surname VARCHAR(30),
   CONSTRAINT pk_passenger PRIMARY KEY(id)
 );
 
 CREATE TABLE booking(
   code INT NOT NULL,
-  contact INT NOT NULL,
+  contact INT,
   payed BOOLEAN,
   price DOUBLE,
-  payedby INT NOT NULL,
+  passenger_count INT,
+  payedby INT,
   flight INT NOT NULL,
   CONSTRAINT pk_booking PRIMARY KEY(code)
 );
@@ -118,7 +118,6 @@ CREATE TABLE ccinfo(
   id INT AUTO_INCREMENT,
   ccnumber BIGINT,
   name VARCHAR(30),
-  surname VARCHAR(30),
   CONSTRAINT pk_ccinfo PRIMARY KEY(id)
 );
 
