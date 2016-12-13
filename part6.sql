@@ -1,27 +1,34 @@
 SELECT 'Creating reservation stored procedures (part 6)' AS 'Message';
 
--- FIXME
+
+-- TODO: Hay que cambiar algo, nos pasan el número de reservas. Nuestra BD no funciona así.
 delimiter //
 CREATE PROCEDURE addReservation(IN deptcode VARCHAR(3), IN arrcode VARCHAR(3),
                                 IN yr INT, IN wk INT, IN day VARCHAR(10),
                                 IN dtime TIME, IN nofpass INT, OUT resnum INT)
 BEGIN
 
-SELECT id INTO @fid FROM flight WHERE year = yr
-                                      and week = wk
-                                      and wflight = (SELECT id
-                                                 FROM weekly_flight
-                                                 WHERE weekday like lower(day)
-                                                 and departure_time = dtime
-                                                 and route = (SELECT id
-                                                              FROM route
-                                                              WHERE dest like arrcode
-                                                              and source like deptcode));
+DECLARE route_id INT;    -- Route ID
+DECLARE wflight_id INT;  -- Weekly flight ID
+DECLARE flight_id INT;   -- Flight ID
 
-INSERT INTO booking (price, flight)
-VALUES (calculatePrice(@fid), @fid);
+SELECT id INTO @route_id FROM route WHERE dest LIKE upper(arrcode) AND source LIKE upper(deptcode);
+SELECT id INTO @wflight_id FROM weekly_flight
+  WHERE weekday LIKE lower(day) AND departure_time = dtime AND route = @route_id;
+SELECT id INTO @flight_id FROM flight
+  WHERE year = yr AND week = wk AND wflight = @wflight_id;
+-- TODO: Flight not found
 
-SET resnum = LAST_INSERT_ID();
+IF calculateFreeSeats(@flight_id) < nofpass
+THEN
+  SELECT 'There are not enough seats available on the chosen flight' AS 'Message';
+
+ELSE  -- TODO: Not finished
+  INSERT INTO booking (price, flight)
+  VALUES (calculatePrice(@flight_id), @flight_id);
+  SET resnum = RAND()*10000;
+
+END IF;
 
 END; //
 delimiter ;
@@ -34,7 +41,10 @@ INSERT INTO passenger (passport,name)
 VALUES (pass, lower(pass_name));
 
 INSERT INTO passenger_bookings (booking, passenger)
-VALUES (reserv, LAST_INSERT_ID());
+VALUES (reserv, (SELECT id
+                 FROM passenger
+                 WHERE name like lower(pass_name)
+                 and passport = pass));
 
 END; //
 delimiter ;
@@ -57,7 +67,6 @@ WHERE code = reserv;
 END; //
 delimiter ;
 
--- TODO: Comprobar pago antes de hacerlo
 delimiter //
 CREATE PROCEDURE addPayment(IN reserv INT, IN cc_name VARCHAR(30), IN cc_n BIGINT)
 BEGIN

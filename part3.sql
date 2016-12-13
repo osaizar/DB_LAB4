@@ -33,9 +33,9 @@ delimiter ;
 delimiter //
 CREATE PROCEDURE addRoute(IN deptcode VARCHAR(3), IN arrcode VARCHAR(3), IN yr INT, IN cost DOUBLE)
 BEGIN
-INSERT INTO route (dest, source, price, year)
-VALUES ((SELECT code FROM airport WHERE code LIKE upper(arrcode)),
-        (SELECT code FROM airport WHERE code LIKE upper(deptcode)),
+INSERT INTO route (source, dest, price, year)
+VALUES ((SELECT code FROM airport WHERE code LIKE upper(deptcode)),
+        (SELECT code FROM airport WHERE code LIKE upper(arrcode)),
         cost, yr);
 END; //
 delimiter ;
@@ -61,7 +61,7 @@ VALUES ((SELECT id FROM week_day WHERE name LIKE lower(day)),
 
 -- NOW THE 52 INSTANCES OF THAT FLIGHT:
 
-SELECT id INTO @wflight_id FROM weekly_flight WHERE route = @rt;
+SELECT id INTO @wflight_id FROM weekly_flight WHERE route = @rt AND departure_time = dtime;
 
 SET @cnt = 1;
 SET @cnts = 1;
