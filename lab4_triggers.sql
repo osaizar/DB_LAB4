@@ -1,5 +1,7 @@
 SELECT 'Creating triggers (part 5)' AS 'Message';
 
+DROP TRIGGER IF EXISTS before_ticket_insert;
+
 DELIMITER $$
 CREATE TRIGGER before_ticket_insert
     BEFORE INSERT ON ticket
@@ -8,6 +10,7 @@ BEGIN
     SET NEW.code = RAND()*10000;
 END$$
 DELIMITER ;
+
 
 SELECT 'Creating reservation stored procedures (part 6)' AS 'Message';
 
