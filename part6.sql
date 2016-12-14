@@ -1,7 +1,6 @@
 SELECT 'Creating reservation stored procedures (part 6)' AS 'Message';
 
 
--- TODO: Hay que cambiar algo, nos pasan el número de reservas. Nuestra BD no funciona así.
 delimiter //
 CREATE PROCEDURE addReservation(IN deptcode VARCHAR(3), IN arrcode VARCHAR(3),
                                 IN yr INT, IN wk INT, IN day VARCHAR(10),
@@ -15,19 +14,26 @@ DECLARE flight_id INT;   -- Flight ID
 SELECT id INTO @route_id FROM route WHERE dest LIKE upper(arrcode) AND source LIKE upper(deptcode);
 SELECT id INTO @wflight_id FROM weekly_flight
   WHERE weekday LIKE lower(day) AND departure_time = dtime AND route = @route_id;
-SELECT id INTO @flight_id FROM flight
-  WHERE year = yr AND week = wk AND wflight = @wflight_id;
--- TODO: Flight not found
-
-IF calculateFreeSeats(@flight_id) < nofpass
+  
+IF NULLIF(@wflight_id, '') IS NULL  -- FIXME
 THEN
-  SELECT 'There are not enough seats available on the chosen flight' AS 'Message';
+  SELECT 'There exist no flight for the given route, date and time' AS 'Message';
 
-ELSE  -- TODO: Not finished
-  INSERT INTO booking (price, flight)
-  VALUES (calculatePrice(@flight_id), @flight_id);
-  SET resnum = RAND()*10000;
+ELSE  -- If the flight exists
+  SELECT id INTO @flight_id FROM flight
+    WHERE year = yr AND week = wk AND wflight = @wflight_id;
 
+  IF (calculateFreeSeats(@flight_id) < nofpass)
+  THEN
+    SELECT 'There are not enough seats available on the chosen flight' AS 'Message';
+
+  ELSE  -- TODO: Finished?
+    INSERT INTO booking (price, passenger_count, flight)
+    VALUES (calculatePrice(@flight_id)*nofpass, nofpass, @flight_id);
+
+    SET resnum = LAST_INSERT_ID();
+
+  END IF;
 END IF;
 
 END; //
@@ -40,11 +46,14 @@ BEGIN
 INSERT INTO passenger (passport,name)
 VALUES (pass, lower(pass_name));
 
-INSERT INTO passenger_bookings (booking, passenger)
-VALUES (reserv, (SELECT id
-                 FROM passenger
-                 WHERE name like lower(pass_name)
-                 and passport = pass));
+-- DEBUG
+SELECT * FROM booking;
+SELECT reserv AS 'CODE';
+-- END DEBUG
+
+INSERT INTO passenger_bookings (passenger, booking)
+VALUES ((SELECT id FROM passenger WHERE name like lower(pass_name) and passport = pass),
+        (SELECT code FROM booking WHERE code = reserv));
 
 END; //
 delimiter ;

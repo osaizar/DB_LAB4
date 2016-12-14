@@ -52,7 +52,7 @@ DECLARE flight_id INT;   -- Flight ID
 
 -- WEEKLY FLIGHT INSERTION:
 
-SELECT id INTO @rt FROM route WHERE ((dest LIKE upper(deptcode)) AND (source LIKE upper(arrcode)) AND (year = yr));
+SELECT id INTO @rt FROM route WHERE ((source LIKE upper(deptcode)) AND (dest LIKE upper(arrcode)) AND (year = yr));
 INSERT INTO weekly_flight (weekday, route, departure_time)
 VALUES ((SELECT id FROM week_day WHERE name LIKE lower(day)),
         @rt,
