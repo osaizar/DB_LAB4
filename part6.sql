@@ -52,22 +52,35 @@ CREATE PROCEDURE addPassenger(IN reserv INT, IN pass INT, IN pass_name VARCHAR(3
 BEGIN
 
 DECLARE booking_id INT;
+DECLARE payer_id INT;
 SET @booking_id = 0;
 
-INSERT INTO passenger (passport,name)
-VALUES (pass, lower(pass_name));
+SELECT payedby INTO @payer_id FROM booking WHERE code = reserv;
 
-SELECT id INTO @booking_id FROM booking WHERE code = reserv;
-
-IF @booking_id = 0
+IF @payer_id IS NOT NULL
 THEN
-  SELECT 'The given reservation number does not exist' AS 'Message';
+  SELECT 'The booking has already been payed and no futher passengers can be added' AS 'Message';
 
 ELSE
-  INSERT INTO passenger_bookings (passenger, booking)
-  VALUES ((SELECT id FROM passenger WHERE name like lower(pass_name) and passport = pass),
-          @booking_id);
+  INSERT INTO passenger (passport,name)
+  VALUES (pass, lower(pass_name));
 
+  SELECT id INTO @booking_id FROM booking WHERE code = reserv;
+
+  IF @booking_id = 0
+  THEN
+    SELECT 'The given reservation number does not exist' AS 'Message';
+
+  ELSE
+    INSERT INTO passenger_bookings (passenger, booking)
+    VALUES ((SELECT id FROM passenger WHERE name like lower(pass_name) and passport = pass),
+            @booking_id);
+
+    UPDATE booking
+  	SET passenger_count = (SELECT COUNT(*) FROM passenger_bookings WHERE booking = @booking_id)
+  	WHERE id = @booking_id;
+
+  END IF;
 END IF;
 
 END; //
@@ -123,8 +136,9 @@ BEGIN
 
 DECLARE booking_id INT;
 DECLARE contact_id INT;
-DECLARE payer_id INT;
+DECLARE passenger_num INT;
 SET @booking_id = 0;
+SET @passenger_num = 0;
 
 SELECT id INTO @booking_id FROM booking WHERE code = reserv;
 
@@ -133,11 +147,14 @@ THEN
   SELECT 'The given reservation number does not exist' AS 'Message';
 
 ELSE
-  SELECT payedby INTO @payer_id FROM booking WHERE id = @booking_id;
+  SELECT passenger_count INTO @passenger_num FROM booking WHERE code = reserv;
 
-  IF @payer_id IS NOT NULL
+  IF (calculateFreeSeats(@flight_id) < @passenger_num)
   THEN
-    SELECT 'The booking has already been payed and no futher passengers can be added' AS 'Message';
+    SELECT 'There are not enough seats available on the flight anymore, deleting reservation' AS 'Message';
+
+    DELETE FROM passenger_bookings WHERE booking = @booking_id;
+    DELETE FROM booking WHERE code = reserv;
 
   ELSE
     SELECT contact INTO @contact_id FROM booking WHERE code = reserv;

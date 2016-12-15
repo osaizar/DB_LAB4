@@ -100,7 +100,6 @@ CREATE TABLE booking(
   id INT AUTO_INCREMENT,
   code INT NOT NULL,
   contact INT,
-  payed BOOLEAN,
   price DOUBLE,
   passenger_count INT,
   payedby INT,
@@ -145,6 +144,6 @@ ALTER TABLE ticket ADD CONSTRAINT fk_ticket_booking FOREIGN KEY (booking) REFERE
 ALTER TABLE booking ADD CONSTRAINT fk_booking_ccinfo FOREIGN KEY (payedby) REFERENCES ccinfo(id);
 ALTER TABLE booking ADD CONSTRAINT fk_booking_contact FOREIGN KEY (contact) REFERENCES contact(id);
 ALTER TABLE booking ADD CONSTRAINT fk_booking_flight FOREIGN KEY (flight) REFERENCES flight(id);
-ALTER TABLE contact ADD CONSTRAINT fk_contact_passenger FOREIGN KEY (passenger) REFERENCES passenger(id);
+ALTER TABLE contact ADD CONSTRAINT fk_contact_passenger FOREIGN KEY (passenger) REFERENCES passenger(id) ON DELETE CASCADE;
 ALTER TABLE passenger_bookings ADD CONSTRAINT fk_pb_bookings FOREIGN KEY (booking) REFERENCES booking(id);
 ALTER TABLE passenger_bookings ADD CONSTRAINT fk_pb_passenger FOREIGN KEY (passenger) REFERENCES passenger(id);

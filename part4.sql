@@ -13,7 +13,7 @@ BEGIN
   select 40-COUNT(*)
   INTO @seats
   from booking
-  where booking.flight = flight and booking.payed = 0;
+  where booking.flight = flight and booking.payedby IS NULL;
   RETURN @seats;
 
 END;
