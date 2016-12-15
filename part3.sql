@@ -26,7 +26,7 @@ CREATE PROCEDURE addDestination(IN acode VARCHAR(3), IN aname VARCHAR(30), IN co
 BEGIN
 INSERT INTO country (name) VALUES (lower(country));
 INSERT INTO airport VALUES (upper(acode), lower(aname),
-                            (SELECT id FROM country WHERE name LIKE lower(country)));
+                            (SELECT id FROM country WHERE name LIKE lower(country) LIMIT 1));
 END; //
 delimiter ;
 
@@ -54,7 +54,7 @@ DECLARE flight_id INT;   -- Flight ID
 
 SELECT id INTO @rt FROM route WHERE ((source LIKE upper(deptcode)) AND (dest LIKE upper(arrcode)) AND (year = yr));
 INSERT INTO weekly_flight (weekday, route, departure_time)
-VALUES ((SELECT id FROM week_day WHERE name LIKE lower(day)),
+VALUES ((SELECT id FROM week_day WHERE name LIKE lower(day) and year = yr),
         @rt,
         dtime);
 
