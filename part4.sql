@@ -30,7 +30,10 @@ BEGIN
   DECLARE yfactor DOUBLE;
   DECLARE routeprice DOUBLE;
 
-  SET seats = 40 - calculateFreeSeats(flight); -- seats o @seats?
+  select COUNT(*)
+  INTO @seats
+  from booking
+  where booking.flight = flight and booking.payedby IS NULL;
 
   select week_day.wpfactor
   INTO @wfactor

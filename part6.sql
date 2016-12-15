@@ -18,7 +18,7 @@ SET @wflight_id = 0;
 SET @flight_id = 0;
 
 
-SELECT id INTO @route_id FROM route WHERE dest LIKE upper(arrcode) AND source LIKE upper(deptcode);
+SELECT id INTO @route_id FROM route WHERE dest LIKE upper(arrcode) AND source LIKE upper(deptcode) AND year = yr;
 SELECT id INTO @day_id FROM week_day WHERE (name LIKE lower(day) AND year = yr);
 SELECT id INTO @wflight_id FROM weekly_flight
   WHERE (weekday = @day_id AND departure_time = dtime AND route = @route_id);
@@ -62,9 +62,6 @@ THEN
   SELECT 'The booking has already been payed and no futher passengers can be added' AS 'Message';
 
 ELSE
-  INSERT INTO passenger (passport,name)
-  VALUES (pass, lower(pass_name));
-
   SELECT id INTO @booking_id FROM booking WHERE code = reserv;
 
   IF @booking_id = 0
@@ -72,6 +69,9 @@ ELSE
     SELECT 'The given reservation number does not exist' AS 'Message';
 
   ELSE
+    INSERT INTO passenger (passport,name)
+    VALUES (pass, lower(pass_name));
+
     INSERT INTO passenger_bookings (passenger, booking)
     VALUES ((SELECT id FROM passenger WHERE name like lower(pass_name) and passport = pass),
             @booking_id);
@@ -113,13 +113,14 @@ ELSE
     SELECT 'The person is not a passenger of the reservation' AS 'Message';
 
   ELSE
+
     INSERT INTO contact (passenger, phone, email)
     VALUES (@passenger_id, ph, lower(eml));
 
     UPDATE booking
     SET contact = (SELECT id
                    FROM contact
-                   WHERE passenger = passport_number
+                   WHERE passenger = @passenger_id
                    and phone = ph
                    and email like lower(eml))
     WHERE id = @booking_id;
