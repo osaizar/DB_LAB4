@@ -22,8 +22,8 @@ SELECT 'Creating tables' AS 'Message';
 
 CREATE TABLE route(
   id INT AUTO_INCREMENT,
-  dest VARCHAR(3) NOT NULL,
   source VARCHAR(3) NOT NULL,
+  dest VARCHAR(3) NOT NULL,
   price DOUBLE,
   year INT,
   CONSTRAINT pk_route PRIMARY KEY(id)
