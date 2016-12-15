@@ -1,4 +1,4 @@
-SELECT 'Creating triggers (part 5)' AS 'Message';
+SELECT 'Creating triggers (part5)' AS 'Message';
 
 DROP TRIGGER IF EXISTS before_ticket_insert;
 DROP TRIGGER IF EXISTS before_booking_insert;

@@ -1,4 +1,4 @@
-SELECT 'Creating custom views (part 7)' AS 'Message';
+SELECT 'Creating custom views (part7)' AS 'Message';
 
 
 DROP VIEW IF EXISTS allFlights;
@@ -16,5 +16,5 @@ FROM flight
 JOIN weekly_flight on weekly_flight.id = flight.wflight
 JOIN route on route.id = weekly_flight.route
 JOIN airport AS dep on dep.code = route.source
-JOIN airport AS arr on dep.code = route.dest
+JOIN airport AS arr on arr.code = route.dest
 JOIN week_day on week_day.id  = weekly_flight.weekday;

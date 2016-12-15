@@ -10,10 +10,16 @@ CREATE FUNCTION calculateFreeSeats(flight INT)
   RETURNS INT
 BEGIN
   DECLARE seats INT;
-  select 40-COUNT(*)
+  select 40-SUM(passenger_count)
   INTO @seats
   from booking
-  where booking.flight = flight and booking.payedby IS NULL;
+  where booking.flight = flight and booking.payedby IS NOT NULL;
+
+  IF @seats IS NULL -- if SUM() is 0 it returns NULL
+  THEN
+  SET @seats = 40;
+  END IF;
+
   RETURN @seats;
 
 END;
@@ -30,10 +36,7 @@ BEGIN
   DECLARE yfactor DOUBLE;
   DECLARE routeprice DOUBLE;
 
-  select COUNT(*)
-  INTO @seats
-  from booking
-  where booking.flight = flight and booking.payedby IS NULL;
+  SET @seats = 40-calculateFreeSeats(flight);
 
   select week_day.wpfactor
   INTO @wfactor

@@ -1,5 +1,9 @@
-SELECT 'Creating reservation stored procedures (part 6)' AS 'Message';
+SELECT 'Creating reservation stored procedures (part6)' AS 'Message';
 
+DROP PROCEDURE IF EXISTS addReservation;
+DROP PROCEDURE IF EXISTS addPassenger;
+DROP PROCEDURE IF EXISTS addContact;
+DROP PROCEDURE IF EXISTS addPayment
 
 delimiter //
 CREATE PROCEDURE addReservation(IN deptcode VARCHAR(3), IN arrcode VARCHAR(3),
@@ -36,8 +40,8 @@ ELSE  -- If the flight exists
     SELECT 'There are not enough seats available on the chosen flight' AS 'Message';
 
   ELSE
-    INSERT INTO booking (price, passenger_count, flight)
-    VALUES (calculatePrice(@flight_id)*nofpass, nofpass, @flight_id);
+    INSERT INTO booking (passenger_count, flight)
+    VALUES (nofpass, @flight_id);
 
     SELECT code INTO resnum FROM booking WHERE (id = LAST_INSERT_ID());
 
@@ -166,7 +170,8 @@ ELSE
       VALUES (cc_n, lower(cc_name));
 
       UPDATE booking
-      SET payedby = LAST_INSERT_ID()
+      SET payedby = LAST_INSERT_ID(),
+          price = calculatePrice(flight)*passenger_count
       WHERE code = reserv;
 
     ELSE

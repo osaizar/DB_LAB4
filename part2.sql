@@ -1,7 +1,4 @@
-DROP DATABASE IF EXISTS lab4;
-CREATE DATABASE lab4;
-
-USE lab4;
+SELECT 'Creating tables (part2)' AS 'Message';
 
 DROP TABLE IF EXISTS route;
 DROP TABLE IF EXISTS airport;
@@ -18,7 +15,6 @@ DROP TABLE IF EXISTS booking;
 DROP TABLE IF EXISTS ccinfo;
 DROP TABLE IF EXISTS passenger_bookings;
 
-SELECT 'Creating tables' AS 'Message';
 
 CREATE TABLE route(
   id INT AUTO_INCREMENT,
@@ -144,6 +140,6 @@ ALTER TABLE ticket ADD CONSTRAINT fk_ticket_booking FOREIGN KEY (booking) REFERE
 ALTER TABLE booking ADD CONSTRAINT fk_booking_ccinfo FOREIGN KEY (payedby) REFERENCES ccinfo(id);
 ALTER TABLE booking ADD CONSTRAINT fk_booking_contact FOREIGN KEY (contact) REFERENCES contact(id);
 ALTER TABLE booking ADD CONSTRAINT fk_booking_flight FOREIGN KEY (flight) REFERENCES flight(id);
-ALTER TABLE contact ADD CONSTRAINT fk_contact_passenger FOREIGN KEY (passenger) REFERENCES passenger(id) ON DELETE CASCADE;
+ALTER TABLE contact ADD CONSTRAINT fk_contact_passenger FOREIGN KEY (passenger) REFERENCES passenger(id) ON DELETE CASCADE; -- When a passenger is deleted, so should the contact
 ALTER TABLE passenger_bookings ADD CONSTRAINT fk_pb_bookings FOREIGN KEY (booking) REFERENCES booking(id);
 ALTER TABLE passenger_bookings ADD CONSTRAINT fk_pb_passenger FOREIGN KEY (passenger) REFERENCES passenger(id);
