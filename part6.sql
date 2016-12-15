@@ -51,17 +51,24 @@ delimiter //
 CREATE PROCEDURE addPassenger(IN reserv INT, IN pass INT, IN pass_name VARCHAR(30))
 BEGIN
 
+DECLARE booking_id INT;
+SET @booking_id = 0;
+
 INSERT INTO passenger (passport,name)
 VALUES (pass, lower(pass_name));
 
--- DEBUG
--- SELECT * FROM booking;
--- SELECT reserv AS 'CODE';
--- END DEBUG
+SELECT id INTO @booking_id FROM booking WHERE code = reserv;
 
-INSERT INTO passenger_bookings (passenger, booking)
-VALUES ((SELECT id FROM passenger WHERE name like lower(pass_name) and passport = pass),
-        (SELECT id FROM booking WHERE code = reserv));
+IF @booking_id = 0
+THEN
+  SELECT 'The given reservation number does not exist' AS 'Message';
+
+ELSE
+  INSERT INTO passenger_bookings (passenger, booking)
+  VALUES ((SELECT id FROM passenger WHERE name like lower(pass_name) and passport = pass),
+          @booking_id);
+
+END IF;
 
 END; //
 delimiter ;
@@ -70,16 +77,42 @@ delimiter //
 CREATE PROCEDURE addContact(IN reserv INT, IN passport_number INT, IN eml VARCHAR(30), IN ph BIGINT)
 BEGIN
 
-INSERT INTO contact (passenger, phone, email)
-VALUES (passport_number, ph, lower(eml));
+DECLARE booking_id INT;
+DECLARE passenger_id INT;
+DECLARE security_check INT;
+SET @booking_id = 0;
+SET @passenger_id = 0;
+SET @security_check = 0;
 
-UPDATE booking
-SET contact = (SELECT id
-               FROM contact
-               WHERE passenger = passport_number
-               and phone = ph
-               and email like lower(eml))
-WHERE code = reserv;
+SELECT id INTO @booking_id FROM booking WHERE code = reserv;
+
+IF @booking_id = 0
+THEN
+  SELECT 'The given reservation number does not exist' AS 'Message';
+
+ELSE
+  SELECT id INTO @passenger_id FROM passenger WHERE passport = passport_number LIMIT 1;
+  SELECT passenger INTO @security_check FROM passenger_bookings
+    WHERE passenger = @passenger_id AND booking = @booking_id LIMIT 1;
+
+  IF @security_check = 0
+  THEN
+    SELECT 'The person is not a passenger of the reservation' AS 'Message';
+
+  ELSE
+    INSERT INTO contact (passenger, phone, email)
+    VALUES (@passenger_id, ph, lower(eml));
+
+    UPDATE booking
+    SET contact = (SELECT id
+                   FROM contact
+                   WHERE passenger = passport_number
+                   and phone = ph
+                   and email like lower(eml))
+    WHERE id = @booking_id;
+
+  END IF;
+END IF;
 
 END; //
 delimiter ;
@@ -88,15 +121,42 @@ delimiter //
 CREATE PROCEDURE addPayment(IN reserv INT, IN cc_name VARCHAR(30), IN cc_n BIGINT)
 BEGIN
 
-INSERT INTO ccinfo (ccnumber, name)
-VALUES (cc_n, lower(cc_name));
+DECLARE booking_id INT;
+DECLARE contact_id INT;
+DECLARE payer_id INT;
+SET @booking_id = 0;
 
-UPDATE booking
-SET payedby = (SELECT id
-               FROM ccinfo
-               WHERE ccnumber = cc_n
-               and name like lower(cc_name))
-WHERE code = reserv;
+SELECT id INTO @booking_id FROM booking WHERE code = reserv;
+
+IF @booking_id = 0
+THEN
+  SELECT 'The given reservation number does not exist' AS 'Message';
+
+ELSE
+  SELECT payedby INTO @payer_id FROM booking WHERE id = @booking_id;
+
+  IF @payer_id IS NOT NULL
+  THEN
+    SELECT 'The booking has already been payed and no futher passengers can be added' AS 'Message';
+
+  ELSE
+    SELECT contact INTO @contact_id FROM booking WHERE code = reserv;
+
+    IF @contact_id IS NOT NULL
+    THEN
+      INSERT INTO ccinfo (ccnumber, name)
+      VALUES (cc_n, lower(cc_name));
+
+      UPDATE booking
+      SET payedby = LAST_INSERT_ID()
+      WHERE code = reserv;
+
+    ELSE
+      SELECT 'The reservation has no contact yet' AS 'Message';
+
+    END IF;
+  END IF;
+END IF;
 
 END; //
 delimiter ;
