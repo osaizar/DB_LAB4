@@ -81,11 +81,12 @@ CREATE TABLE seat(
 );
 
 CREATE TABLE ticket(
+  id INT AUTO_INCREMENT,
   code INT NOT NULL,
   seat INT NOT NULL,
   passenger INT NOT NULL,
   booking INT NOT NULL,
-  CONSTRAINT pk_ticket PRIMARY KEY(code)
+  CONSTRAINT pk_ticket PRIMARY KEY(id)
 );
 
 CREATE TABLE passenger(
@@ -96,6 +97,7 @@ CREATE TABLE passenger(
 );
 
 CREATE TABLE booking(
+  id INT AUTO_INCREMENT,
   code INT NOT NULL,
   contact INT,
   payed BOOLEAN,
@@ -103,7 +105,7 @@ CREATE TABLE booking(
   passenger_count INT,
   payedby INT,
   flight INT NOT NULL,
-  CONSTRAINT pk_booking PRIMARY KEY(code)
+  CONSTRAINT pk_booking PRIMARY KEY(id)
 );
 
 CREATE TABLE contact(
@@ -139,10 +141,10 @@ ALTER TABLE flight ADD CONSTRAINT fk_flight_year FOREIGN KEY (year) REFERENCES y
 ALTER TABLE seat ADD CONSTRAINT fk_seat_flight FOREIGN KEY (flight) REFERENCES flight(id);
 ALTER TABLE ticket ADD CONSTRAINT fk_ticket_seat FOREIGN KEY (seat) REFERENCES seat(id);
 ALTER TABLE ticket ADD CONSTRAINT fk_ticket_passenger FOREIGN KEY (passenger) REFERENCES passenger(id);
-ALTER TABLE ticket ADD CONSTRAINT fk_ticket_booking FOREIGN KEY (booking) REFERENCES booking(code);
+ALTER TABLE ticket ADD CONSTRAINT fk_ticket_booking FOREIGN KEY (booking) REFERENCES booking(id);
 ALTER TABLE booking ADD CONSTRAINT fk_booking_ccinfo FOREIGN KEY (payedby) REFERENCES ccinfo(id);
 ALTER TABLE booking ADD CONSTRAINT fk_booking_contact FOREIGN KEY (contact) REFERENCES contact(id);
 ALTER TABLE booking ADD CONSTRAINT fk_booking_flight FOREIGN KEY (flight) REFERENCES flight(id);
 ALTER TABLE contact ADD CONSTRAINT fk_contact_passenger FOREIGN KEY (passenger) REFERENCES passenger(id);
-ALTER TABLE passenger_bookings ADD CONSTRAINT fk_pb_bookings FOREIGN KEY (booking) REFERENCES booking(code);
+ALTER TABLE passenger_bookings ADD CONSTRAINT fk_pb_bookings FOREIGN KEY (booking) REFERENCES booking(id);
 ALTER TABLE passenger_bookings ADD CONSTRAINT fk_pb_passenger FOREIGN KEY (passenger) REFERENCES passenger(id);

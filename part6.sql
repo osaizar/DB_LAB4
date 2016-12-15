@@ -8,14 +8,22 @@ CREATE PROCEDURE addReservation(IN deptcode VARCHAR(3), IN arrcode VARCHAR(3),
 BEGIN
 
 DECLARE route_id INT;    -- Route ID
+DECLARE day_id INT;      -- Day ID
 DECLARE wflight_id INT;  -- Weekly flight ID
 DECLARE flight_id INT;   -- Flight ID
 
+SET @route_id = 0;
+SET @day_id = 0;
+SET @wflight_id = 0;
+SET @flight_id = 0;
+
+
 SELECT id INTO @route_id FROM route WHERE dest LIKE upper(arrcode) AND source LIKE upper(deptcode);
+SELECT id INTO @day_id FROM week_day WHERE (name LIKE lower(day) AND year = yr);
 SELECT id INTO @wflight_id FROM weekly_flight
-  WHERE weekday LIKE lower(day) AND departure_time = dtime AND route = @route_id;
-  
-IF NULLIF(@wflight_id, '') IS NULL  -- FIXME
+  WHERE (weekday = @day_id AND departure_time = dtime AND route = @route_id);
+
+IF @wflight_id = 0
 THEN
   SELECT 'There exist no flight for the given route, date and time' AS 'Message';
 
@@ -27,11 +35,11 @@ ELSE  -- If the flight exists
   THEN
     SELECT 'There are not enough seats available on the chosen flight' AS 'Message';
 
-  ELSE  -- TODO: Finished?
+  ELSE
     INSERT INTO booking (price, passenger_count, flight)
     VALUES (calculatePrice(@flight_id)*nofpass, nofpass, @flight_id);
 
-    SET resnum = LAST_INSERT_ID();
+    SELECT code INTO resnum FROM booking WHERE (id = LAST_INSERT_ID());  -- FIXME
 
   END IF;
 END IF;
