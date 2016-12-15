@@ -39,7 +39,7 @@ ELSE  -- If the flight exists
     INSERT INTO booking (price, passenger_count, flight)
     VALUES (calculatePrice(@flight_id)*nofpass, nofpass, @flight_id);
 
-    SELECT code INTO resnum FROM booking WHERE (id = LAST_INSERT_ID());  -- FIXME
+    SELECT code INTO resnum FROM booking WHERE (id = LAST_INSERT_ID());
 
   END IF;
 END IF;
@@ -55,13 +55,13 @@ INSERT INTO passenger (passport,name)
 VALUES (pass, lower(pass_name));
 
 -- DEBUG
-SELECT * FROM booking;
-SELECT reserv AS 'CODE';
+-- SELECT * FROM booking;
+-- SELECT reserv AS 'CODE';
 -- END DEBUG
 
 INSERT INTO passenger_bookings (passenger, booking)
 VALUES ((SELECT id FROM passenger WHERE name like lower(pass_name) and passport = pass),
-        (SELECT code FROM booking WHERE code = reserv));
+        (SELECT id FROM booking WHERE code = reserv));
 
 END; //
 delimiter ;
