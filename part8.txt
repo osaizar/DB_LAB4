@@ -1,0 +1,31 @@
+a) How can you protect the credit card information in the database from hackers?
+   If we store credit card information in our database as plain text and someone
+   has access to it (a hacker, a system administrator...) the credit cards can
+   be compromised and leaked or sold on the internet.
+
+   To avoid this, we can encrypt the credit card information. There are many
+   algorithms to encrypt information, but as the credit card information will
+   be used once it's stored, we have to use a two way encryption algorithm.
+
+   A well known two way encryption algorithm is AES (with different key sizes:
+   128, 192 or 256 bits). AES uses the same key to encrypt and decrypt the
+   information. This way, if we create a secure AES-256 key and encrypt all the
+   credit card information with it, we should be safe. The key must be stored
+   safely as if an attacker gets access to it he/she could decrypt all the
+   encrypted information.
+
+b) Give three advantages of using stored procedures in the database (and thereby
+   execute them on the server) instead of writing the same functions in the frontend
+   of the system (in for example java-script on a web-page)?
+
+   1-. Security:
+        Using stored procedures can limit the access the aplication has to the
+        database only allowing the necessary interactions.
+   2-. Peformance:
+       The SQL server will always be faster executing stored procedures as the
+       server has all the stored procedures in cache.
+   3-. Mantainability:
+       If a query on the database has to be changed, there is no need to change
+       the aplication itself, we just have to change the stored procedure.
+       This means that we don't need to compile the aplication again or force the
+       users to download a patch.
