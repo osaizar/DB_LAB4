@@ -3,7 +3,7 @@ SELECT 'Creating reservation stored procedures (part6)' AS 'Message';
 DROP PROCEDURE IF EXISTS addReservation;
 DROP PROCEDURE IF EXISTS addPassenger;
 DROP PROCEDURE IF EXISTS addContact;
-DROP PROCEDURE IF EXISTS addPayment
+DROP PROCEDURE IF EXISTS addPayment;
 
 delimiter //
 CREATE PROCEDURE addReservation(IN deptcode VARCHAR(3), IN arrcode VARCHAR(3),
