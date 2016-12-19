@@ -1,0 +1,635 @@
+%%% Scripts %%%
+-- Run this script to setup all the database.
+-- Authors: Juan Ramon del Cano & Oier Saizar
+
+drop database lab4;
+create database lab4;
+use lab4;
+
+source part2.sql
+source part3.sql
+source part3.sql
+source part4.sql
+source part5.sql
+source part6.sql
+source part7.sql
+source part10.sql --this one is optional, it only adds a delay to make overbookings possible
+
+SELECT 'Creating tables (part2)' AS 'Message';
+
+DROP TABLE IF EXISTS route;
+DROP TABLE IF EXISTS airport;
+DROP TABLE IF EXISTS city;
+DROP TABLE IF EXISTS country;
+DROP TABLE IF EXISTS weekly_flight;
+DROP TABLE IF EXISTS week_day;
+DROP TABLE IF EXISTS flight;
+DROP TABLE IF EXISTS year;
+DROP TABLE IF EXISTS seat;
+DROP TABLE IF EXISTS ticket;
+DROP TABLE IF EXISTS passenger;
+DROP TABLE IF EXISTS booking;
+DROP TABLE IF EXISTS ccinfo;
+DROP TABLE IF EXISTS passenger_bookings;
+
+
+CREATE TABLE route(
+  id INT AUTO_INCREMENT,
+  source VARCHAR(3) NOT NULL,
+  dest VARCHAR(3) NOT NULL,
+  price DOUBLE,
+  year INT,
+  CONSTRAINT pk_route PRIMARY KEY(id)
+);
+
+CREATE TABLE airport(
+  code VARCHAR(3) NOT NULL,
+  name VARCHAR(30),
+  country INT NOT NULL,
+  CONSTRAINT pk_airport PRIMARY KEY(code)
+);
+
+
+CREATE TABLE country(
+  id INT AUTO_INCREMENT,
+  name VARCHAR(30),
+  CONSTRAINT pk_country PRIMARY KEY(id)
+);
+
+CREATE TABLE weekly_flight(
+  id INT AUTO_INCREMENT,
+  weekday INT NOT NULL,
+  route INT NOT NULL,
+  departure_time TIME,
+  CONSTRAINT pk_wflight PRIMARY KEY(id)
+);
+
+CREATE TABLE week_day(
+  id INT AUTO_INCREMENT,
+  name VARCHAR(10),
+  year INT,
+  wpfactor DOUBLE,
+  CONSTRAINT pk_wday PRIMARY KEY(id)
+);
+
+CREATE TABLE flight(
+  id INT AUTO_INCREMENT,
+  wflight INT NOT NULL,
+  week INT,
+  year INT NOT NULL,
+  CONSTRAINT pk_flight PRIMARY KEY(id)
+);
+
+CREATE TABLE year(
+  year INT NOT NULL,
+  ypfactor DOUBLE,
+  CONSTRAINT pk_year PRIMARY KEY(year)
+);
+
+CREATE TABLE seat(
+  id INT AUTO_INCREMENT,
+  name INT,
+  flight  INT NOT NULL,
+  CONSTRAINT pk_seat PRIMARY KEY(id)
+);
+
+CREATE TABLE ticket(
+  id INT AUTO_INCREMENT,
+  code INT NOT NULL,
+  seat INT NOT NULL,
+  passenger INT NOT NULL,
+  booking INT NOT NULL,
+  CONSTRAINT pk_ticket PRIMARY KEY(id)
+);
+
+CREATE TABLE passenger(
+  id INT AUTO_INCREMENT,
+  passport INT,
+  name VARCHAR(30),
+  CONSTRAINT pk_passenger PRIMARY KEY(id)
+);
+
+CREATE TABLE booking(
+  id INT AUTO_INCREMENT,
+  code INT NOT NULL,
+  contact INT,
+  price DOUBLE,
+  passenger_count INT,
+  payedby INT,
+  flight INT NOT NULL,
+  CONSTRAINT pk_booking PRIMARY KEY(id)
+);
+
+CREATE TABLE contact(
+  id INT AUTO_INCREMENT,
+  passenger INT NOT NULL,
+  phone BIGINT,
+  email VARCHAR(30),
+  CONSTRAINT pk_contact PRIMARY KEY(id)
+);
+
+CREATE TABLE ccinfo(
+  id INT AUTO_INCREMENT,
+  ccnumber BIGINT,
+  name VARCHAR(30),
+  CONSTRAINT pk_ccinfo PRIMARY KEY(id)
+);
+
+CREATE TABLE passenger_bookings(
+  passenger INT NOT NULL,
+  booking INT NOT NULL,
+  CONSTRAINT pk_passbook PRIMARY KEY(passenger,booking)
+);
+
+SELECT 'Creating foreign keys' AS 'Message';
+
+ALTER TABLE route ADD CONSTRAINT fk_route_dest FOREIGN KEY (dest) REFERENCES airport(code);
+ALTER TABLE route ADD CONSTRAINT fk_route_source FOREIGN KEY (source) REFERENCES airport(code);
+ALTER TABLE airport ADD CONSTRAINT fk_airport_country FOREIGN KEY (country) REFERENCES country(id);
+ALTER TABLE weekly_flight ADD CONSTRAINT fk_weeklyflight_route FOREIGN KEY (route) REFERENCES route(id);
+ALTER TABLE weekly_flight ADD CONSTRAINT fk_weeklyflight_weekday FOREIGN KEY (weekday) REFERENCES week_day(id);
+ALTER TABLE flight ADD CONSTRAINT fk_flight_weekflight FOREIGN KEY (wflight) REFERENCES weekly_flight(id);
+ALTER TABLE flight ADD CONSTRAINT fk_flight_year FOREIGN KEY (year) REFERENCES year(year);
+ALTER TABLE seat ADD CONSTRAINT fk_seat_flight FOREIGN KEY (flight) REFERENCES flight(id);
+ALTER TABLE ticket ADD CONSTRAINT fk_ticket_seat FOREIGN KEY (seat) REFERENCES seat(id);
+ALTER TABLE ticket ADD CONSTRAINT fk_ticket_passenger FOREIGN KEY (passenger) REFERENCES passenger(id);
+ALTER TABLE ticket ADD CONSTRAINT fk_ticket_booking FOREIGN KEY (booking) REFERENCES booking(id);
+ALTER TABLE booking ADD CONSTRAINT fk_booking_ccinfo FOREIGN KEY (payedby) REFERENCES ccinfo(id);
+ALTER TABLE booking ADD CONSTRAINT fk_booking_contact FOREIGN KEY (contact) REFERENCES contact(id);
+ALTER TABLE booking ADD CONSTRAINT fk_booking_flight FOREIGN KEY (flight) REFERENCES flight(id);
+ALTER TABLE contact ADD CONSTRAINT fk_contact_passenger FOREIGN KEY (passenger) REFERENCES passenger(id) ON DELETE CASCADE; -- When a passenger is deleted, so should the contact
+ALTER TABLE passenger_bookings ADD CONSTRAINT fk_pb_bookings FOREIGN KEY (booking) REFERENCES booking(id);
+ALTER TABLE passenger_bookings ADD CONSTRAINT fk_pb_passenger FOREIGN KEY (passenger) REFERENCES passenger(id);SELECT 'Creating stored procedures (part3)' AS 'Message';
+
+DROP PROCEDURE IF EXISTS addYear;
+DROP PROCEDURE IF EXISTS addDay;
+DROP PROCEDURE IF EXISTS addDestination;
+DROP PROCEDURE IF EXISTS addRoute;
+DROP PROCEDURE IF EXISTS addFlight;
+
+
+delimiter //
+CREATE PROCEDURE addYear(IN yr INT, IN fctr DOUBLE)
+BEGIN
+INSERT INTO year (year, ypfactor) VALUES (yr, fctr);
+END; //
+delimiter ;
+
+delimiter //
+CREATE PROCEDURE addDay(IN yr INT, IN day VARCHAR(10), IN fctr DOUBLE)
+BEGIN
+INSERT INTO week_day (name, year, wpfactor) VALUES (lower(day), yr, fctr);
+END; //
+delimiter ;
+
+delimiter //
+CREATE PROCEDURE addDestination(IN acode VARCHAR(3), IN aname VARCHAR(30), IN country VARCHAR(30))
+BEGIN
+INSERT INTO country (name) VALUES (lower(country));
+INSERT INTO airport VALUES (upper(acode), lower(aname),
+                            (SELECT id FROM country WHERE name LIKE lower(country) LIMIT 1));
+END; //
+delimiter ;
+
+delimiter //
+CREATE PROCEDURE addRoute(IN deptcode VARCHAR(3), IN arrcode VARCHAR(3), IN yr INT, IN cost DOUBLE)
+BEGIN
+INSERT INTO route (source, dest, price, year)
+VALUES ((SELECT code FROM airport WHERE code LIKE upper(deptcode)),
+        (SELECT code FROM airport WHERE code LIKE upper(arrcode)),
+        cost, yr);
+END; //
+delimiter ;
+
+delimiter //
+CREATE PROCEDURE addFlight(IN deptcode VARCHAR(3), IN arrcode VARCHAR(3), IN yr INT, IN day VARCHAR(10), IN dtime TIME)
+BEGIN
+
+DECLARE rt INT;          -- Route ID
+DECLARE cnt INT;         -- Count for the flights (52)
+DECLARE cnts INT;        -- Count fot the seats (40)
+DECLARE wflight_id INT;  -- Weekly flight ID
+DECLARE flight_id INT;   -- Flight ID
+
+-- WEEKLY FLIGHT INSERTION:
+
+SELECT id INTO @rt FROM route WHERE ((source LIKE upper(deptcode)) AND (dest LIKE upper(arrcode)) AND (year = yr));
+INSERT INTO weekly_flight (weekday, route, departure_time)
+VALUES ((SELECT id FROM week_day WHERE name LIKE lower(day) and year = yr),
+        @rt,
+        dtime);
+
+
+-- NOW THE 52 INSTANCES OF THAT FLIGHT:
+
+SELECT id INTO @wflight_id FROM weekly_flight WHERE route = @rt AND departure_time = dtime;
+
+SET @cnt = 1;
+SET @cnts = 1;
+WHILE @cnt < 53
+DO
+
+   INSERT INTO flight (wflight, week, year)
+   VALUES (@wflight_id, @cnt, yr);
+
+   -- AND THE 40 SEATS FOR EACH FLIGHT:
+
+   SELECT id INTO @flight_id FROM flight WHERE week = @cnt AND year = yr AND wflight = @wflight_id;
+
+   WHILE @cnts < 41
+   DO
+      INSERT INTO seat (name, flight)
+      VALUES (@cnts, @flight_id);
+
+      SET @cnts = @cnts + 1;
+   END WHILE;  -- Seats while
+
+   SET @cnts = 1;
+   SET @cnt = @cnt + 1;
+END WHILE;  -- Flights while
+
+END; //
+delimiter ;
+
+SELECT 'Creating help functions (part4)' AS 'Message';
+
+DROP FUNCTION IF EXISTS calculateFreeSeats;
+DROP FUNCTION IF EXISTS calculatePrice;
+
+
+DELIMITER $$
+CREATE FUNCTION calculateFreeSeats(flight INT)
+  RETURNS INT
+BEGIN
+  DECLARE seats INT;
+  select 40-SUM(passenger_count)
+  INTO @seats
+  from booking
+  where booking.flight = flight and booking.payedby IS NOT NULL;
+
+  IF @seats IS NULL -- if SUM() is 0 it returns NULL
+  THEN
+  SET @seats = 40;
+  END IF;
+
+  RETURN @seats;
+
+END;
+$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE FUNCTION calculatePrice(flight INT)
+  RETURNS DOUBLE
+BEGIN
+  DECLARE totalprice DOUBLE;
+  DECLARE seats INT;
+  DECLARE wfactor DOUBLE;
+  DECLARE yfactor DOUBLE;
+  DECLARE routeprice DOUBLE;
+
+  SET @seats = 40-calculateFreeSeats(flight);
+
+  select week_day.wpfactor
+  INTO @wfactor
+  from flight
+  join weekly_flight on flight.wflight = weekly_flight.id
+  join week_day on weekly_flight.weekday = week_day.id
+  where week_day.year = flight.year and flight.id = flight;
+
+  select year.ypfactor
+  into @yfactor
+  from flight
+  join year on flight.year = year.year
+  where flight.id = flight;
+
+  select route.price
+  into @routeprice
+  from flight
+  join weekly_flight on flight.wflight = weekly_flight.id
+  join route on weekly_flight.route = route.id
+  where flight.id = flight;
+
+  SET @totalprice = @routeprice * @wfactor * (@seats+1)/40 * @yfactor;
+  RETURN @totalprice;
+
+END;
+$$
+DELIMITER ;
+
+SELECT 'Creating triggers (part5)' AS 'Message';
+
+DROP TRIGGER IF EXISTS before_ticket_insert;
+DROP TRIGGER IF EXISTS before_booking_insert;
+
+DELIMITER $$
+CREATE TRIGGER before_ticket_insert
+    BEFORE INSERT ON ticket
+    FOR EACH ROW
+BEGIN
+    SET NEW.code = RAND()*10000;
+END$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE TRIGGER before_booking_insert
+    BEFORE INSERT ON booking
+    FOR EACH ROW
+BEGIN
+    SET NEW.code = RAND()*10000;
+END$$
+DELIMITER ;
+
+SELECT 'Creating reservation stored procedures (part6)' AS 'Message';
+
+DROP PROCEDURE IF EXISTS addReservation;
+DROP PROCEDURE IF EXISTS addPassenger;
+DROP PROCEDURE IF EXISTS addContact;
+DROP PROCEDURE IF EXISTS addPayment;
+
+delimiter //
+CREATE PROCEDURE addReservation(IN deptcode VARCHAR(3), IN arrcode VARCHAR(3),
+                                IN yr INT, IN wk INT, IN day VARCHAR(10),
+                                IN dtime TIME, IN nofpass INT, OUT resnum INT)
+BEGIN
+
+DECLARE route_id INT;    -- Route ID
+DECLARE day_id INT;      -- Day ID
+DECLARE wflight_id INT;  -- Weekly flight ID
+DECLARE flight_id INT;   -- Flight ID
+
+SET @route_id = 0;
+SET @day_id = 0;
+SET @wflight_id = 0;
+SET @flight_id = 0;
+
+
+SELECT id INTO @route_id FROM route WHERE dest LIKE upper(arrcode) AND source LIKE upper(deptcode) AND year = yr;
+SELECT id INTO @day_id FROM week_day WHERE (name LIKE lower(day) AND year = yr);
+SELECT id INTO @wflight_id FROM weekly_flight
+  WHERE (weekday = @day_id AND departure_time = dtime AND route = @route_id);
+
+IF @wflight_id = 0
+THEN
+  SELECT 'There exist no flight for the given route, date and time' AS 'Message';
+
+ELSE  -- If the flight exists
+  SELECT id INTO @flight_id FROM flight
+    WHERE year = yr AND week = wk AND wflight = @wflight_id;
+
+  IF (calculateFreeSeats(@flight_id) < nofpass)
+  THEN
+    SELECT 'There are not enough seats available on the chosen flight' AS 'Message';
+
+  ELSE
+    INSERT INTO booking (passenger_count, flight)
+    VALUES (nofpass, @flight_id);
+
+    SELECT code INTO resnum FROM booking WHERE (id = LAST_INSERT_ID());
+
+  END IF;
+END IF;
+
+END; //
+delimiter ;
+
+delimiter //
+CREATE PROCEDURE addPassenger(IN reserv INT, IN pass INT, IN pass_name VARCHAR(30))
+BEGIN
+
+DECLARE booking_id INT;
+DECLARE payer_id INT;
+SET @booking_id = 0;
+
+SELECT payedby INTO @payer_id FROM booking WHERE code = reserv;
+
+IF @payer_id IS NOT NULL
+THEN
+  SELECT 'The booking has already been payed and no futher passengers can be added' AS 'Message';
+
+ELSE
+  SELECT id INTO @booking_id FROM booking WHERE code = reserv;
+
+  IF @booking_id = 0
+  THEN
+    SELECT 'The given reservation number does not exist' AS 'Message';
+
+  ELSE
+    INSERT INTO passenger (passport,name)
+    VALUES (pass, lower(pass_name));
+
+    INSERT INTO passenger_bookings (passenger, booking)
+    VALUES ((SELECT id FROM passenger WHERE name like lower(pass_name) and passport = pass limit 1),
+            @booking_id);
+
+    UPDATE booking
+  	SET passenger_count = (SELECT COUNT(*) FROM passenger_bookings WHERE booking = @booking_id)
+  	WHERE id = @booking_id;
+
+  END IF;
+END IF;
+
+END; //
+delimiter ;
+
+delimiter //
+CREATE PROCEDURE addContact(IN reserv INT, IN passport_number INT, IN eml VARCHAR(30), IN ph BIGINT)
+BEGIN
+
+DECLARE booking_id INT;
+DECLARE passenger_id INT;
+DECLARE security_check INT;
+SET @booking_id = 0;
+SET @passenger_id = 0;
+SET @security_check = 0;
+
+SELECT id INTO @booking_id FROM booking WHERE code = reserv;
+
+IF @booking_id = 0
+THEN
+  SELECT 'The given reservation number does not exist' AS 'Message';
+
+ELSE
+  SELECT id INTO @passenger_id FROM passenger WHERE passport = passport_number LIMIT 1;
+  SELECT passenger INTO @security_check FROM passenger_bookings
+    WHERE passenger = @passenger_id AND booking = @booking_id LIMIT 1;
+
+  IF @security_check = 0
+  THEN
+    SELECT 'The person is not a passenger of the reservation' AS 'Message';
+
+  ELSE
+
+    INSERT INTO contact (passenger, phone, email)
+    VALUES (@passenger_id, ph, lower(eml));
+
+    UPDATE booking
+    SET contact = (SELECT id
+                   FROM contact
+                   WHERE passenger = @passenger_id
+                   and phone = ph
+                   and email like lower(eml)
+                   limit 1)
+    WHERE id = @booking_id;
+
+  END IF;
+END IF;
+
+END; //
+delimiter ;
+
+delimiter //
+CREATE PROCEDURE addPayment(IN reserv INT, IN cc_name VARCHAR(30), IN cc_n BIGINT)
+BEGIN
+
+DECLARE booking_id INT;
+DECLARE contact_id INT;
+DECLARE passenger_num INT;
+SET @booking_id = 0;
+SET @passenger_num = 0;
+
+SELECT id INTO @booking_id FROM booking WHERE code = reserv;
+
+IF @booking_id = 0
+THEN
+  SELECT 'The given reservation number does not exist' AS 'Message';
+
+ELSE
+  SELECT passenger_count INTO @passenger_num FROM booking WHERE code = reserv;
+
+  IF (calculateFreeSeats(@flight_id) < @passenger_num)
+  THEN
+    SELECT 'There are not enough seats available on the flight anymore, deleting reservation' AS 'Message';
+
+    DELETE FROM passenger_bookings WHERE booking = @booking_id;
+    DELETE FROM booking WHERE code = reserv;
+
+  ELSE
+    SELECT contact INTO @contact_id FROM booking WHERE code = reserv;
+
+    IF @contact_id IS NOT NULL
+    THEN
+      INSERT INTO ccinfo (ccnumber, name)
+      VALUES (cc_n, lower(cc_name));
+
+      UPDATE booking
+      SET payedby = LAST_INSERT_ID(),
+          price = calculatePrice(flight)*passenger_count
+      WHERE code = reserv;
+
+    ELSE
+      SELECT 'The reservation has no contact yet' AS 'Message';
+
+    END IF;
+  END IF;
+END IF;
+
+END; //
+delimiter ;
+
+SELECT 'Creating custom views (part7)' AS 'Message';
+
+
+DROP VIEW IF EXISTS allFlights;
+
+CREATE VIEW allFlights AS
+SELECT dep.name AS "DEPARTURE_CITY_NAME",
+       arr.name AS "DESTINATION_CITY_NAME",
+       weekly_flight.departure_time as "DEPARTURE_TIME",
+       week_day.name as "DEPARTURE_DAY",
+       flight.week as "DEPARTURE_WEEK",
+       flight.year as "DEPARTURE_YEAR",
+       calculateFreeSeats(flight.id) as "NR_OF_FREE_SEATS",
+       calculatePrice(flight.id) as "CURRENT_PRICE_PER_SEAT"
+FROM flight
+JOIN weekly_flight on weekly_flight.id = flight.wflight
+JOIN route on route.id = weekly_flight.route
+JOIN airport AS dep on dep.code = route.source
+JOIN airport AS arr on arr.code = route.dest
+JOIN week_day on week_day.id  = weekly_flight.weekday;
+
+SELECT 'Making overbookings possible (part10)' AS 'Message';
+
+-- This script changes the addPayment procedure to make overbookings possible.
+DROP PROCEDURE IF EXISTS addPayment;
+
+delimiter //
+CREATE PROCEDURE addPayment(IN reserv INT, IN cc_name VARCHAR(30), IN cc_n BIGINT)
+BEGIN
+
+DECLARE booking_id INT;
+DECLARE contact_id INT;
+DECLARE passenger_num INT;
+SET @booking_id = 0;
+SET @passenger_num = 0;
+
+SELECT id INTO @booking_id FROM booking WHERE code = reserv;
+
+IF @booking_id = 0
+THEN
+  SELECT 'The given reservation number does not exist' AS 'Message';
+
+ELSE
+  SELECT passenger_count INTO @passenger_num FROM booking WHERE code = reserv;
+
+  IF (calculateFreeSeats(@flight_id) < @passenger_num)
+  THEN
+    SELECT 'There are not enough seats available on the flight anymore, deleting reservation' AS 'Message';
+
+    DELETE FROM passenger_bookings WHERE booking = @booking_id;
+    DELETE FROM booking WHERE code = reserv;
+
+  ELSE
+    SELECT contact INTO @contact_id FROM booking WHERE code = reserv;
+
+    IF @contact_id IS NOT NULL
+    THEN
+      SELECT SLEEP(5); -- All the checks have been made, if another session makes changes on the tables, a ovebooking can occur.
+      INSERT INTO ccinfo (ccnumber, name)
+      VALUES (cc_n, lower(cc_name));
+
+      UPDATE booking
+      SET payedby = LAST_INSERT_ID(),
+          price = calculatePrice(flight)*passenger_count
+      WHERE code = reserv;
+
+    ELSE
+      SELECT 'The reservation has no contact yet' AS 'Message';
+
+    END IF;
+  END IF;
+END IF;
+
+END; //
+delimiter ;
+
+
+%%% REPORT %%%
+
+LAB 4
+(Parts 2 to 7 can be found on the “sql scripts” folder)
+Part 8:
+a) 
+If we store credit card information in our database as plain text and someone has access to it (a hacker, a system administrator...) the credit cards can be compromised and leaked or sold on the Internet.
+To avoid this, we can encrypt the credit card information. There are many algorithms to encrypt information, but as the credit card information will be used once it's stored, we have to use a two way encryption algorithm.
+A well known two way encryption algorithm is AES (with different key sizes: 128, 192 or 256 bits). AES uses the same key to encrypt and decrypt the information. This way, if we create a secure AES-256 key and encrypt all the credit card information with it, we should be safe. The key must be stored safely as if an attacker gets access to it he/she could decrypt all the encrypted information.
+
+b)
+1-. Security:
+Using stored procedures can limit the access the application has to the database only allowing the necessary interactions.
+2-. Performance:
+The SQL server will always be faster executing stored procedures as the server has all the stored procedures in cache.
+3-. Maintainability:
+If a query on the database has to be changed, there is no need to change the application itself, we just have to change the stored procedure. This means that we don't need to compile the application again or force the users to download a patch.
+Part 9
+b)
+No. As the session A is doing a transaction the changes won't be applied until the transaction is committed. And as the transaction on B started before the database changed, the information on B keeps unchanged.
+c)
+If we try to alter the information inserted on A, the session B gets blocked. This block continues until the transaction on A is committed, then, the changes are made on the session B but they won't be applied until it ends with a commit.This happens because the A session has a write lock on the table bookings,this lock doesn't allow to the session B to continue. The lock is freed when session A commits the changes, and with this B can continue with the task.
+Part 10
+a)
+No. As the stored procedure addPayment() checks if there are enough seats on the plane, and one query has been executed slightly earlier than the other, one of the reservations always gets deleted.
+b)
+Yes, if two different sessions run addPayment at the exact same time an overbooking can be possible because they both check if there is room in the booking at the same time. If this happens, both sessions would make their booking, creating an overbooking.
+c)
+To make this possible we have inserted a 5 second delay after all checks have been made, just before the insert starts (part10.sql)
