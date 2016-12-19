@@ -1,7 +1,7 @@
 a) How can you protect the credit card information in the database from hackers?
    If we store credit card information in our database as plain text and someone
    has access to it (a hacker, a system administrator...) the credit cards can
-   be compromised and leaked or sold on the internet.
+   be compromised and leaked or sold on the Internet.
 
    To avoid this, we can encrypt the credit card information. There are many
    algorithms to encrypt information, but as the credit card information will
@@ -19,13 +19,13 @@ b) Give three advantages of using stored procedures in the database (and thereby
    of the system (in for example java-script on a web-page)?
 
    1-. Security:
-        Using stored procedures can limit the access the aplication has to the
+        Using stored procedures can limit the access the application has to the
         database only allowing the necessary interactions.
-   2-. Peformance:
+   2-. Performance:
        The SQL server will always be faster executing stored procedures as the
        server has all the stored procedures in cache.
-   3-. Mantainability:
+   3-. Maintainability:
        If a query on the database has to be changed, there is no need to change
-       the aplication itself, we just have to change the stored procedure.
-       This means that we don't need to compile the aplication again or force the
+       the application itself, we just have to change the stored procedure.
+       This means that we don't need to compile the application again or force the
        users to download a patch.

@@ -1,7 +1,7 @@
 a) Run test 6
 b) No. As the session A is doing a transaction the changes won't be applied
-   untill the transaction is commited. And as the transaction on B started before
+   until the transaction is committed. And as the transaction on B started before
    the database changed, the information on B keeps unchanged.
 c) If we try to alter the information inserted on A, the session B gets blocked.
-   This block continues until the transaction on A is commmited, then, the changes are
-   made on te session B but they won't be applied until it ends with a commit.
+   This block continues until the transaction on A is committed, then, the changes are
+   made on the session B but they won't be applied until it ends with a commit.

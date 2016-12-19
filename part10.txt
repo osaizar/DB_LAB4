@@ -1,0 +1,5 @@
+a) No. As the stored procedure addPayment() checks if there are enough seats on
+   the plane, and one query has been executed slightly earlier than the other,
+   one of the reservations always gets deleted.
+
+b) 

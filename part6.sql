@@ -77,7 +77,7 @@ ELSE
     VALUES (pass, lower(pass_name));
 
     INSERT INTO passenger_bookings (passenger, booking)
-    VALUES ((SELECT id FROM passenger WHERE name like lower(pass_name) and passport = pass),
+    VALUES ((SELECT id FROM passenger WHERE name like lower(pass_name) and passport = pass limit 1),
             @booking_id);
 
     UPDATE booking
@@ -126,7 +126,8 @@ ELSE
                    FROM contact
                    WHERE passenger = @passenger_id
                    and phone = ph
-                   and email like lower(eml))
+                   and email like lower(eml)
+                   limit 1)
     WHERE id = @booking_id;
 
   END IF;
