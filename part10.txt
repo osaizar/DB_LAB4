@@ -2,4 +2,9 @@ a) No. As the stored procedure addPayment() checks if there are enough seats on
    the plane, and one query has been executed slightly earlier than the other,
    one of the reservations always gets deleted.
 
-b) 
+b) Yes, if two different sessions run addPayment at the exact same time an overbooking
+   can be possible because they both check if there is room in the booking at the
+   same time. If this happens, both sessions would make their booking, creating
+   an overbooking.
+c) To make this possible we have inserted a 5 second delay after all checks have
+   been made, just before the insert starts (part10.sql).
