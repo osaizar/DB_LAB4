@@ -89,6 +89,7 @@ CREATE TABLE passenger(
   id INT AUTO_INCREMENT,
   passport INT,
   name VARCHAR(30),
+  UNIQUE (passport),
   CONSTRAINT pk_passenger PRIMARY KEY(id)
 );
 
