@@ -140,13 +140,23 @@ delimiter //
 CREATE PROCEDURE addPayment(IN reserv INT, IN cc_name VARCHAR(30), IN cc_n BIGINT)
 BEGIN
 
-DECLARE booking_id INT;
+DECLARE booking_id INT DEFAULT 0;
 DECLARE contact_id INT;
 DECLARE passenger_num INT;
-SET @booking_id = 0;
+-- Variables and cursor for the ticket generation
+DECLARE cnt INT;
+DECLARE seat_number INT;
+DECLARE single_passenger INT;
+
+DECLARE cursor_passenger CURSOR
+FOR SELECT passenger FROM passenger_bookings
+WHERE booking = @booking_id;
+
+-- SET @booking_id = 0;
 SET @passenger_num = 0;
 
 SELECT id INTO @booking_id FROM booking WHERE code = reserv;
+
 
 IF @booking_id = 0
 THEN
@@ -175,6 +185,25 @@ ELSE
           price = calculatePrice(flight)*passenger_count
       WHERE code = reserv;
 
+      -- Ticket generation
+      SET @cnt = 0;
+      OPEN cursor_passenger;
+      FETCH cursor_passenger INTO single_passenger;
+
+      WHILE (@FETCH_STATUS = 0)
+      DO
+        SELECT "Inserting stuff to tickets" as "Message"; -- debug
+
+        SET @seat_number = 40 - calculateFreeSeats(@flight_id) + @cnt + 1;
+
+        INSERT INTO ticket (seat, passenger, booking)
+        VALUES (@seat_number, @single_passenger, @booking_id);
+
+        SET @cnt = @cnt + 1;
+        FETCH cursor_passenger INTO single_passenger;
+      END WHILE;  -- Ticket generation
+      CLOSE cursor_passenger;
+      
     ELSE
       SELECT 'The reservation has no contact yet' AS 'Message';
 
