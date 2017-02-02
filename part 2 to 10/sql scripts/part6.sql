@@ -143,23 +143,26 @@ BEGIN
 DECLARE booking_id INT DEFAULT 0;
 DECLARE contact_id INT;
 DECLARE passenger_num INT;
+DECLARE flight_id INT;
 -- Variables and cursor for the ticket generation
-DECLARE cnt INT;
 DECLARE seat_number INT;
-DECLARE single_passenger INT;
+DECLARE passenger_v INT;
+DECLARE no_more_people INT;
+DECLARE count INT;
 
-DECLARE cursor_passenger CURSOR
-FOR SELECT passenger FROM passenger_bookings
+
+DECLARE cursor_passenger CURSOR FOR
+SELECT passenger FROM passenger_bookings
 WHERE booking = @booking_id;
 
--- SET @booking_id = 0;
+DECLARE CONTINUE HANDLER FOR NOT FOUND SET no_more_people=1;
+
 SET @passenger_num = 0;
 
 SELECT id INTO @booking_id FROM booking WHERE code = reserv;
+SELECT flight INTO @flight_id FROM booking WHERE code = reserv;
 
-
-IF @booking_id = 0
-THEN
+IF @booking_id = 0 THEN
   SELECT 'The given reservation number does not exist' AS 'Message';
 
 ELSE
@@ -186,24 +189,26 @@ ELSE
       WHERE code = reserv;
 
       -- Ticket generation
-      SET @cnt = 0;
+      SET @count = 0;
+      SET no_more_people = 0;
       OPEN cursor_passenger;
-      FETCH cursor_passenger INTO single_passenger;
+      passenger_loop:WHILE (no_more_people = 0) DO
+        FETCH cursor_passenger INTO passenger_v;
+        IF no_more_people = 1 THEN
+          LEAVE passenger_loop;
+        END IF;
 
-      WHILE (@FETCH_STATUS = 0)
-      DO
-        SELECT "Inserting stuff to tickets" as "Message"; -- debug
-
-        SET @seat_number = 40 - calculateFreeSeats(@flight_id) + @cnt + 1;
-
+        SET @seat_number = 40 - calculateFreeSeats(@flight_id) - @count;
         INSERT INTO ticket (seat, passenger, booking)
-        VALUES (@seat_number, @single_passenger, @booking_id);
+        VALUES (@seat_number, passenger_v, @booking_id);
 
-        SET @cnt = @cnt + 1;
-        FETCH cursor_passenger INTO single_passenger;
-      END WHILE;  -- Ticket generation
+        SET @count = @count+1;
+
+      END WHILE passenger_loop;
       CLOSE cursor_passenger;
-      
+      SET no_more_people = 0;
+
+      -- END Ticket generation
     ELSE
       SELECT 'The reservation has no contact yet' AS 'Message';
 
